@@ -1,41 +1,45 @@
 from scapy.all import *
+from time import sleep
 from multiprocessing import Process
 
-crawl = {"comment" : ["gilgil", "hyejin", "minwoo", "kyeongsu", "dohoon"]}
+crawl = {"comment" : ["gilgil", "hyejin", "minwoo", "kyeongsu", "dohoon"], "interface":"wlan0"}
+br = "ff:ff:ff:ff:ff:ff"
 
-def dotmake():
-	br = "ff:ff:ff:ff:ff:ff"
+class makebeacon:
 	dot11 = Dot11(addr1=br, addr2 = str(RandMAC()), addr3=str(RandMAC()))
-	dot22 = Dot11(addr1=br, addr2 = str(RandMAC()), addr3=str(RandMAC()))
-	dot33 = Dot11(addr1=br, addr2 = str(RandMAC()), addr3=str(RandMAC()))
-	dot44 = Dot11(addr1=br, addr2 = str(RandMAC()), addr3=str(RandMAC()))
-	dot55 = Dot11(addr1=br, addr2 = str(RandMAC()), addr3=str(RandMAC()))
+	beacon11 = Dot11Beacon(cap="ESS+privacy") #option : ESS or ESS+privacy
 
-	beacon1= Dot11Beacon(cap="ESS+privacy")
-	beacon2= Dot11Beacon(cap="ESS")
-	beacon3= Dot11Beacon(cap="ESS")
-	beacon4= Dot11Beacon(cap="ESS+privacy")
-	beacon5= Dot11Beacon(cap="ESS")
+	def __init__(self, count, interface):
+		self.count = count
+		self.interface = interface
 
-	essid1 = Dot11Elt(ID="SSID", info=crawl["comment"][0])
-	essid2 = Dot11Elt(ID="SSID", info=crawl["comment"][1])
-	essid3 = Dot11Elt(ID="SSID", info=crawl["comment"][2])
-	essid4 = Dot11Elt(ID="SSID", info=crawl["comment"][3])
-	essid5 = Dot11Elt(ID="SSID", info=crawl["comment"][4])
+	def sendbeacon(self):
+		essid = Dot11Elt(ID="SSID", info=crawl["comment"][self.count])
+		sendp(RadioTap()/self.dot11/self.beacon11/essid, iface=self.interface, loop=0)
 
-	return dot11, dot22, dot33, dot44, dot55, beacon1, beacon2, beacon3, beacon4, beacon5, essid1, essid2, essid3, essid4, essid5
+class Multibeacon(Process):
 
-def sendbeacon(dot11,dot22,dot33,dot44,dot55,beacon1,beacon2,beacon3,beacon4,beacon5,essid1,essid2,essid3,essid4,essid5):
-	sendp(RadioTap()/dot11/beacon1/essid1, iface="wlan0", loop=0)
-	sendp(RadioTap()/dot22/beacon2/essid2, iface="wlan0", loop=0)
-	sendp(RadioTap()/dot33/beacon3/essid3, iface="wlan0", loop=0)
-	sendp(RadioTap()/dot44/beacon4/essid4, iface="wlan0", loop=0)
-	sendp(RadioTap()/dot55/beacon5/essid5, iface="wlan0", loop=0)
+	def __init__(self, beaconobj):
+		Process.__init__(self)
+		self.beaconobj = beaconobj
+
+	def run(self):
+		self.beaconobj.sendbeacon()
+		sleep(slptime)
 
 
 if __name__ == "__main__":
+	slptime = input("write sleep time: ")
 
-	dot11, dot22, dot33, dot44, dot55, beacon1, beacon2, beacon3, beacon4, beacon5, essid1, essid2, essid3, essid4, essid5 = dotmake()
+	beaconlist = []
+	p_list = []
+
+	for i in range(len(crawl["comment"])):
+		beaconlist.append(makebeacon(i, crawl["interface"]))
+
 	while(1):
-		sendbeacon(dot11,dot22,dot33,dot44,dot55,beacon1,beacon2,beacon3,beacon4,beacon5,essid1,essid2,essid3,essid4,essid5)
-
+		for i in range(len(beaconlist)):
+			p = Multibeacon(beaconlist[i])
+			p.start()
+		for p in p_list:
+			p.join()
