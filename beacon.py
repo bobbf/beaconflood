@@ -15,7 +15,7 @@ class makebeacon:
 
 	def sendbeacon(self):
 		essid = Dot11Elt(ID="SSID", info=crawl["comment"][self.count])
-		sendp(RadioTap()/self.dot11/self.beacon11/essid, iface=self.interface, loop=0)
+		sendp(RadioTap()/self.dot11/self.beacon11/essid, iface=self.interface, loop=0,verbose=False)
 
 class Multibeacon(Process):
 
@@ -37,6 +37,7 @@ if __name__ == "__main__":
 	for i in range(len(crawl["comment"])):
 		beaconlist.append(makebeacon(i, crawl["interface"]))
 
+	print("sending packets")
 	while(1):
 		for i in range(len(beaconlist)):
 			p = Multibeacon(beaconlist[i])
