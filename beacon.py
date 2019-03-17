@@ -22,7 +22,7 @@ class makebeacon:
         self.interface = interface
 
     def sendbeacon(self):
-        essid = Dot11Elt(ID="SSID", info=crawler["comment"][-1*self.count])
+        essid = Dot11Elt(ID="SSID", info=crawl_list[-1*self.count])
         sendp(RadioTap()/self.dot11/self.beacon11/essid, iface=self.interface, loop=0,verbose=False)
         sleep(slptime)
 
@@ -37,8 +37,10 @@ class Multibeacon(Process):
         sleep(slptime)
 
 def handler(signum, f):
+    for i in range(len(crawl["comment"]),len(crawl_list)):
+        crawl["comment"].append(crawl_list[i])
     with open("./ssid.json","w",encoding="UTF8") as json_file:
-        json.dump(crawler, json_file, ensure_ascii=False, indent="\t")
+        json.dump(crawl, json_file, ensure_ascii=False, indent="\t")
     sys.exit()
 
 class messagesender(Process):
@@ -47,17 +49,18 @@ class messagesender(Process):
             svrsock = socket(AF_INET, SOCK_DGRAM)
             svrsock.bind( (IPA, PORT) )
             msg, addr = svrsock.recvfrom(1024)
-            crawler["comment"].append(str(msg.decode()))
+            crawl_list.append(str(msg.decode()))
             print(msg.decode(), addr)
             svrsock.sendto(msg, addr)
 
 if __name__ == "__main__":
     signal.signal(signal.SIGINT, handler)
-    slptime = float(input("write sleep time: "))
+    slptime = float(crawl["sleeptime"])
 
     manager = Manager()
-    crawler = manager.dict()
-    crawler = crawl
+    crawl_list = manager.list()
+    for i in range(len(crawl["comment"])):
+        crawl_list.append(crawl["comment"][i])
     beaconlist = []
     p_list = []
 
@@ -68,12 +71,9 @@ if __name__ == "__main__":
     while(1):
         for i in range(5):
             beaconlist.append(makebeacon(i+1,crawl["interface"]))
-
+        print(crawl_list[-1])
         for i in range(len(beaconlist)):
             p = Multibeacon(beaconlist[i])
             p.start()
-#            p_list.append(p)
-#        for x in p_list:
-#            x.join()
 
         beaconlist = []
