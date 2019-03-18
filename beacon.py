@@ -1,6 +1,6 @@
 from scapy.all import *
 from time import sleep
-from multiprocessing import Process, Manager
+from multiprocessing import Process, Manager, Queue
 import json
 import sys
 import signal
@@ -48,10 +48,21 @@ class messagesender(Process):
         while(1):
             svrsock = socket(AF_INET, SOCK_DGRAM)
             svrsock.bind( (IPA, PORT) )
-            msg, addr = svrsock.recvfrom(1024)
+            msg, addr = svrsock.recvfrom(0xffff)
+            tmp_crawl = json.loads(msg.decode())
+            rec_msg = tmp_crawl["data"]
+
             list_lock.acquire()
-            crawl_list.append(str(msg.decode()))
+            try:
+                for i in range(len(rec_msg)):
+                    for rec_msg[i]["message"] in crawl_list:
+                        pass
+                    else:
+                        crawl_list.append(rec_msg[i]["message"])
+            except:
+                pass
             list_lock.release()
+
             print(msg.decode(), addr)
             svrsock.sendto(msg, addr)
 
@@ -66,7 +77,7 @@ if __name__ == "__main__":
     for i in range(len(crawl["comment"])):
         crawl_list.append(crawl["comment"][i])
     beaconlist = []
-    p_list = []
+    p_queue = Queue()
 
 
     print("sending packets")
