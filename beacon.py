@@ -1,3 +1,4 @@
+
 from scapy.all import *
 from time import sleep
 from multiprocessing import Process, Manager
@@ -39,9 +40,9 @@ class Multibeacon(Process):
 
 def handler(signum, f):
 
-    with open("./ssid.json","w",encoding="UTF8") as json_file:
-        json.dump(crawl, json_file, ensure_ascii=False, indent="\t")
-        sys.exit()
+#    with open("./ssid.json","w",encoding="UTF8") as json_file:
+#        json.dump(crawl, json_file, ensure_ascii=False, indent="\t")
+    sys.exit()
 
 class messagesender(Process):
     def run(self):
@@ -54,16 +55,17 @@ class messagesender(Process):
 #            beacon_list.append(makebeacon(crawl["interface"],msg.decode()))
 
             list_lock.acquire()
-            try:
-                for i in range(len(rec_msg)):
-                    for rec_msg[i]["message"] in crawl_list:
-                        pass
-                    else:
-                        crawl["comment"].append(rec_msg[i]["message"])
-                        crawl_list.append(rec_msg[i]["message"])
-                        beacon_list.append(makebeacon(rec_msg[i]["message"]))
-            except:
-                pass
+            for i in range(len(rec_msg)):
+                if rec_msg[i]["message"] in crawl_list:
+                    pass
+                else:
+                    crawl["comment"].append(rec_msg[i]["message"])
+                    crawl_list.append(rec_msg[i]["message"])
+                    beacon_list.append(makebeacon(crawl["interface"],rec_msg[i]["message"]))
+                    print(crawl["comment"])
+                    with open("./nsid.txt","at",encoding="UTF8") as tfile:
+                        tfile.write(rec_msg[i]["message"])
+                        tfile.write(" ")
             list_lock.release()
 
 #            with open("./nsid.txt","at",encoding="UTF8") as json_file:
