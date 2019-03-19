@@ -1,47 +1,47 @@
 from scapy.all import *
 from time import sleep
-from multiprocessing import Process, Manager, Queue
+from multiprocessing import Process, Manager
 import json
 import sys
-import signal
 from socket import *
+import signal
 
 PORT = 1234
 IPA = "localhost"
 json_data = open("ssid.json").read()
 crawl = json.loads(json_data)
-
 br = "ff:ff:ff:ff:ff:ff"
+RUNNING = 1
 
 class makebeacon:
     dot11 = Dot11(addr1=br, addr2 = str(RandMAC()), addr3=str(RandMAC()))
     beacon11 = Dot11Beacon(cap="ESS+privacy") #option : ESS or ESS+privacy
 
-    def __init__(self, count, interface):
-        self.count = count
+    def __init__(self, interface, mssid):
         self.interface = interface
+        self.mssid = mssid
 
     def sendbeacon(self):
-        essid = Dot11Elt(ID="SSID", info=crawl_list[-1*self.count])
-        sendp(RadioTap()/self.dot11/self.beacon11/essid, iface=self.interface, loop=0,verbose=False)
-        sleep(slptime)
+        essid = Dot11Elt(ID="SSID", info=self.mssid)
+        sendp(RadioTap()/self.dot11/self.beacon11/essid, iface=self.interface, loop=0, verbose=False)
 
 class Multibeacon(Process):
-
-    def __init__(self, beaconobj):
+    global RUNNING
+    def __init__(self):
         Process.__init__(self)
-        self.beaconobj = beaconobj
 
     def run(self):
-        self.beaconobj.sendbeacon()
-        sleep(slptime)
+        while(RUNNING):
+            for i in range(5):
+                beacon_list[(i+1)*-1].sendbeacon()
+                sleep(slptime)
+
 
 def handler(signum, f):
-    for i in range(len(crawl["comment"]),len(crawl_list)):
-        crawl["comment"].append(crawl_list[i])
+
     with open("./ssid.json","w",encoding="UTF8") as json_file:
         json.dump(crawl, json_file, ensure_ascii=False, indent="\t")
-    sys.exit()
+        sys.exit()
 
 class messagesender(Process):
     def run(self):
@@ -51,6 +51,7 @@ class messagesender(Process):
             msg, addr = svrsock.recvfrom(0xffff)
             tmp_crawl = json.loads(msg.decode())
             rec_msg = tmp_crawl["data"]
+#            beacon_list.append(makebeacon(crawl["interface"],msg.decode()))
 
             list_lock.acquire()
             try:
@@ -58,12 +59,17 @@ class messagesender(Process):
                     for rec_msg[i]["message"] in crawl_list:
                         pass
                     else:
+                        crawl["comment"].append(rec_msg[i]["message"])
                         crawl_list.append(rec_msg[i]["message"])
+                        beacon_list.append(makebeacon(rec_msg[i]["message"]))
             except:
                 pass
             list_lock.release()
 
-            print(msg.decode(), addr)
+#            with open("./nsid.txt","at",encoding="UTF8") as json_file:
+#                json_file.write(msg.decode())
+#                json_file.write("\n")
+#            print(msg.decode(), addr)
             svrsock.sendto(msg, addr)
 
 if __name__ == "__main__":
@@ -74,21 +80,22 @@ if __name__ == "__main__":
     crawl_list = manager.list()
     list_lock = manager.Lock()
 
+    manager2 = Manager()
+    beacon_list = manager2.list()
+
     for i in range(len(crawl["comment"])):
         crawl_list.append(crawl["comment"][i])
-    beaconlist = []
-    p_queue = Queue()
-
 
     print("sending packets")
+
+    for i in range(5):
+        beacon_list.append(makebeacon(crawl["interface"],crawl["comment"][i*-1]))
+
     ms = messagesender()
     ms.start()
-    while(1):
-        for i in range(5):
-            beaconlist.append(makebeacon(i+1,crawl["interface"]))
-        print(crawl_list[-1])
-        for i in range(len(beaconlist)):
-            p = Multibeacon(beaconlist[i])
-            p.start()
 
-        beaconlist = []
+    p = Multibeacon()
+    p.start()
+
+    ms.join()
+    p.join()
