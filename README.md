@@ -2,6 +2,19 @@
 
 코드게이트 2019 부스운영을 위한 Repo입니다.
 
+## Menual
+
+1. Git clone or download and extract of this repo
+2. If you want to see facebook comment in wifi list, download this repo : https://github.com/bobbf/fbcrawler
+3. In the beaconflood directory, execute deps.sh. **(./deps.sh)** If you have error, give permission. (ex : 'chmod 777 deps.sh')
+4. After librarys are installed, open the command shell.
+5. Type ''**iwconfig**'' to know your nework device name. You have to prepare wireless network device which support  **Monitor** mode.
+6. Save your network device name, and open **monset.sh**. This file change mode of wireless network device from Managed to Monitor. If your network device name is different with **wlan0**, please change content of **monset.sh**. Change from **wlan0** to your network device name at all part.
+7. We all ready! Type in your command shell ''**python3 beacon.py**.''
+8. If you want to function of '2', execute the other command shell and change directory to fbcrawler.
+9. Execute ''**python3 crawler.py <your facebook token>**''.
+10. Now you can see facebook page comment in your wifi list!
+
 ## Environment
 
 Python 3.6, scapy3k, Kali Linux
