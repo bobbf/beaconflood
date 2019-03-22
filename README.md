@@ -6,14 +6,15 @@
 
 1. Git clone or download and extract of this repo
 2. If you want to see facebook comment in wifi list, download this repo : https://github.com/bobbf/fbcrawler
-3. In the beaconflood directory, execute deps.sh. **(./deps.sh)** If you have error, give permission. (ex : 'chmod 777 deps.sh')
-4. After librarys are installed, open the command shell.
-5. Type ''**iwconfig**'' to know your nework device name. You have to prepare wireless network device which support  **Monitor** mode.
-6. Save your network device name, and open **monset.sh**. This file change mode of wireless network device from Managed to Monitor. If your network device name is different with **wlan0**, please change content of **monset.sh**. Change from **wlan0** to your network device name at all part.
-7. We all ready! Type in your command shell ''**python3 beacon.py**.''
-8. If you want to function of '2', execute the other command shell and change directory to fbcrawler.
-9. Execute ''**python3 crawler.py <your facebook token>**''.
-10. Now you can see facebook page comment in your wifi list!
+3. In the beaconflood directory, execute **chmod +x givep.sh** on terminal, and givep.sh **(./givep.sh)** to give permissions to .sh files.
+4. Execute deps.sh **(./deps.sh)** to install pakages. 
+5. After librarys are installed, open the command shell.
+6. Type ''**iwconfig**'' to know your nework device name. You have to prepare wireless network device which support  **Monitor** mode.
+7. Save your network device name, and open **monset.sh**. This file change mode of wireless network device from Managed to Monitor. If your network device name is different with **wlan0**, please change content of **monset.sh**. Change from **wlan0** to your network device name at all part.
+8. We all ready! Type in your command shell ''**python3 beacon.py**.''
+9. If you want to function of '2', execute the other command shell and change directory to fbcrawler.
+10. Execute ''**python3 crawler.py <your facebook token>**''.
+11. Now you can see facebook page comment in your wifi list!
 
 ## Environment
 
